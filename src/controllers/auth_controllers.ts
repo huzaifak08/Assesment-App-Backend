@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { User } from "../models/user";
+import { User } from "../models/user_model";
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -14,7 +14,9 @@ export const registerUser = async (req: any, res: Response): Promise<any> => {
     const { email, password, name, profilePic } = req.body;
 
     if (!email || !password || !name || !profilePic) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res
+        .status(400)
+        .json({ staus: false, message: "All fields are required" });
     }
 
     const existingUser = await User.findOne({ where: { email } });
@@ -31,7 +33,7 @@ export const registerUser = async (req: any, res: Response): Promise<any> => {
 
     if (!emailRegex.test(email)) {
       return res.status(400).json({
-        status: "fail",
+        status: false,
         message: "Invalid email format",
       });
     }
@@ -49,14 +51,15 @@ export const registerUser = async (req: any, res: Response): Promise<any> => {
 
     if (!token) {
       return res.status(401).json({
-        status: "fail",
-        message: "Failed to create user",
+        status: false,
+        message: "Failed to create user because of token not created.",
       });
     }
 
     return res.status(201).json({
-      status: "success",
+      status: true,
       message: "Welcome to a new World",
+      token: token,
       data: newUser,
     });
   } catch (error) {

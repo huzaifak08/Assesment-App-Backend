@@ -1,51 +1,39 @@
-import { Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
+import { User } from "../models/user_model";
 const jwt = require("jsonwebtoken");
-const { User } = require("../models/user");
 
-interface AuthTokenPayload {
-  email: string;
-}
-``;
-const validateUser = async (req: any, res: Response, next: NextFunction) => {
+const validateUser = async (
+  req: Request | any,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const authToken = req.header("Auth-Token");
+    const token = req.header("Auth-Token");
 
-    if (!authToken) {
-      console.error("No Auth-Token provided");
-      return res.status(401).send("Unauthorized: No Auth-Token provided");
+    if (!token) {
+      res.status(401).json({ error: "Access denied. No token provided." });
+      return;
     }
 
-    let check: AuthTokenPayload;
-    try {
-      check = jwt.verify(
-        authToken,
-        process.env.JWT_AUTH_KEY!
-      ) as AuthTokenPayload;
-    } catch (error) {
-      console.error("JWT verification failed:", error);
-      return res.status(401).send("Unauthorized: Invalid Auth-Token");
+    const secretKey = process.env.JWT_SECRET_KEY!;
+    const payload = jwt.verify(token, secretKey) as { id: string };
+
+    const user = await User.findByPk(payload.id);
+
+    if (!user) {
+      res.send("User not registered");
+      return;
     }
 
-    if (check && check.email) {
-      const profile = await User.findOne({
-        where: { email: check.email, status: "onboarded" },
-      });
+    req.user = user;
 
-      if (profile) {
-        req.auth = {
-          id: profile.id,
-          email: profile.email,
-        };
-      } else {
-        req.auth = { email: check.email };
-      }
-      return next();
-    }
-
-    return res.status(401).send("Unauthorized: Invalid email in token");
-  } catch (err: any) {
-    console.error("Middleware Authentication Error:", err);
-    return res.status(500).send("Internal Server Error");
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: false,
+      message: "Server Error 500",
+    });
+    return;
   }
 };
 
