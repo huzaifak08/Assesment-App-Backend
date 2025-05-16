@@ -63,7 +63,63 @@ export const registerUser = async (req: any, res: Response): Promise<any> => {
       data: newUser,
     });
   } catch (error) {
-    console.error("Error registering user:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
+  }
+};
+
+export const signInUser = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        status: false,
+        message: "Please enter Email and Password",
+      });
+    }
+
+    const emailRegex =
+      /^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid email format",
+      });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "Incorrect Email",
+      });
+    }
+
+    const isPasswordMatched = await bcryptjs.compare(password, user.password);
+
+    if (!isPasswordMatched) {
+      return res.status(400).json({
+        status: false,
+        message: "Incorrect Password",
+      });
+    }
+
+    const token = await generateToken({
+      id: user.id,
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Welcome to Assesment App",
+      token: token,
+      data: user,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
