@@ -13,28 +13,12 @@ export const registerUser = async (req: any, res: Response): Promise<any> => {
   try {
     const { email, password, name, profilePic } = req.body;
 
-    if (!email || !password || !name || !profilePic) {
-      return res
-        .status(400)
-        .json({ staus: false, message: "All fields are required" });
-    }
-
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
-      return res.status(401).json({
+      return res.status(200).json({
         status: false,
         message: "User already exists",
-      });
-    }
-
-    const emailRegex =
-      /^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/;
-
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid email format",
       });
     }
 
@@ -73,35 +57,19 @@ export const signInUser = async (req: any, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        status: false,
-        message: "Please enter Email and Password",
-      });
-    }
-
-    const emailRegex =
-      /^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid email format",
-      });
-    }
-
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(400).json({
+      return res.status(200).json({
         status: false,
-        message: "Incorrect Email",
+        message: "User not found with this email",
       });
     }
 
     const isPasswordMatched = await bcryptjs.compare(password, user.password);
 
     if (!isPasswordMatched) {
-      return res.status(400).json({
+      return res.status(200).json({
         status: false,
         message: "Incorrect Password",
       });

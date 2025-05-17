@@ -15,10 +15,12 @@ export const getRandomQuote = async (req: any, res: Response): Promise<any> => {
     if (response.status === 200) {
       const data = await response.json();
 
+      const quoteObj = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
       return res.status(200).json({
         status: true,
         message: `Quote fetched successfully`,
-        data: data,
+        data: quoteObj,
       });
     } else {
       return res.status(501).json({
