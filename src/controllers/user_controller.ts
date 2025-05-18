@@ -38,3 +38,29 @@ export const getUserProfileData = async (
       .json({ status: false, message: "Internal server error" });
   }
 };
+
+export const getAllUsersProfileData = async (
+  req: any,
+  res: Response
+): Promise<any> => {
+  try {
+    const users = await User.findAll();
+
+    if (users.length < 1) {
+      return res.status(200).json({
+        status: false,
+        message: "No user registered",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Users fetched successfully",
+      data: users,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
+  }
+};
